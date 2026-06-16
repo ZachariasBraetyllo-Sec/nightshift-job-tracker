@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nightshift // Job Search Command Center</title>
+<style>
+:root{
+  --bg:#080b16;
+  --panel:#10162a;
+  --panel-2:#151d36;
+  --ink:#f7f8ff;
+  --muted:#9aa7c7;
+  --violet:#9b7cff;
+  --blue:#5fd4ff;
+  --amber:#ffbd66;
+  --rose:#ff7eb6;
+  --green:#75e6a4;
+  --red:#ff7a90;
+  --line:rgba(255,255,255,.1);
+  --shadow:0 20px 60px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  min-height:100vh;
+  color:var(--ink);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  background:
+    radial-gradient(circle at 12% 10%,rgba(155,124,255,.20),transparent 30%),
+    radial-gradient(circle at 84% 18%,rgba(95,212,255,.15),transparent 28%),
+    radial-gradient(circle at 50% 100%,rgba(255,126,182,.08),transparent 36%),
+    linear-gradient(160deg,#060811 0%,#0b1020 46%,#090c17 100%);
+}
+body:before{
+  content:"";
+  position:fixed; inset:0; pointer-events:none; opacity:.18;
+  background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+  background-size:38px 38px;
+  mask-image:linear-gradient(to bottom,black,transparent 80%);
+}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.app{max-width:1480px;margin:auto;padding:28px}
+.hero{
+  position:relative; overflow:hidden;
+  display:flex;justify-content:space-between;gap:24px;align-items:center;
+  padding:28px;border:1px solid var(--line);border-radius:26px;
+  background:linear-gradient(135deg,rgba(21,29,54,.92),rgba(12,17,34,.86));
+  box-shadow:var(--shadow); backdrop-filter:blur(18px);
+}
+.hero:after{
+  content:"";position:absolute;width:340px;height:340px;border-radius:50%;
+  right:-120px;top:-170px;background:radial-gradient(circle,rgba(155,124,255,.32),transparent 70%);
+}
+.eyebrow{letter-spacing:.18em;text-transform:uppercase;font-size:.72rem;color:var(--blue);font-weight:800}
+h1{margin:.35rem 0 .4rem;font-size:clamp(2rem,5vw,4.1rem);line-height:.95;letter-spacing:-.05em}
+h1 span{background:linear-gradient(90deg,var(--violet),var(--blue),var(--amber));-webkit-background-clip:text;color:transparent}
+.subtitle{color:var(--muted);max-width:720px;font-size:1rem;line-height:1.55}
+.hero-actions{display:flex;gap:10px;flex-wrap:wrap;z-index:1;align-items:center}
+.user-chip{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.06);max-width:220px}
+.user-chip img{width:28px;height:28px;border-radius:50%}.user-chip span{font-size:.8rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.syncbar{margin:14px 0 0;padding:10px 14px;border:1px solid var(--line);border-radius:15px;background:rgba(12,17,32,.75);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.sync-status{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:.84rem;font-weight:800}.sync-dot{width:9px;height:9px;border-radius:50%;background:var(--amber);box-shadow:0 0 14px currentColor}.sync-dot.online{background:var(--green)}.sync-dot.offline{background:var(--red)}
+.lock-screen{position:fixed;inset:0;z-index:30;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 30% 20%,rgba(155,124,255,.18),transparent 30%),linear-gradient(160deg,#060811,#0b1020 55%,#090c17)}
+.lock-card{width:min(520px,100%);padding:30px;border:1px solid var(--line);border-radius:26px;background:linear-gradient(145deg,rgba(20,28,52,.96),rgba(13,19,37,.96));box-shadow:var(--shadow);text-align:center}.lock-card h2{font-size:2rem;margin:.4rem 0}.lock-card p{color:var(--muted);line-height:1.6}
+.btn{
+  border:1px solid var(--line);border-radius:13px;padding:11px 15px;
+  color:var(--ink);background:rgba(255,255,255,.055);font-weight:800;
+  transition:.18s transform,.18s background,.18s border-color;
+}
+.btn:hover{transform:translateY(-1px);background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.2)}
+.btn.primary{background:linear-gradient(135deg,var(--violet),#7558e9);border:none}
+.btn.danger{color:#ffdce4;border-color:rgba(255,122,144,.35)}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0}
+.stat{
+  border:1px solid var(--line);border-radius:20px;padding:18px;
+  background:linear-gradient(145deg,rgba(18,25,48,.92),rgba(12,17,31,.86));
+}
+.stat-label{color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.12em;font-weight:800}
+.stat-value{font-size:2rem;font-weight:900;margin-top:5px}
+.stat small{color:var(--muted)}
+.toolbar{
+  display:grid;grid-template-columns:1.8fr repeat(3,1fr) auto;gap:10px;
+  margin-bottom:16px;padding:14px;border:1px solid var(--line);border-radius:18px;background:rgba(14,20,38,.8)
+}
+.field,.toolbar input,.toolbar select{
+  width:100%;color:var(--ink);background:#0c1224;border:1px solid var(--line);
+  border-radius:12px;padding:11px 12px;outline:none
+}
+.field:focus,.toolbar input:focus,.toolbar select:focus{border-color:var(--violet);box-shadow:0 0 0 3px rgba(155,124,255,.15)}
+option{background:#11182c}
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.column{
+  min-height:240px;border:1px solid var(--line);border-radius:22px;padding:14px;
+  background:rgba(12,17,32,.72);backdrop-filter:blur(12px)
+}
+.column-head{display:flex;align-items:center;justify-content:space-between;margin:2px 2px 12px}
+.column-title{display:flex;align-items:center;gap:9px;font-weight:900}
+.dot{width:10px;height:10px;border-radius:50%;box-shadow:0 0 16px currentColor}
+.count{color:var(--muted);font-size:.8rem}
+.cards{display:grid;gap:11px}
+.card{
+  position:relative;border:1px solid var(--line);border-radius:17px;padding:15px;
+  background:linear-gradient(145deg,rgba(25,34,63,.95),rgba(15,22,42,.95));
+  box-shadow:0 10px 25px rgba(0,0,0,.18)
+}
+.card.overdue{border-color:rgba(255,122,144,.6);box-shadow:0 0 0 1px rgba(255,122,144,.15),0 12px 30px rgba(255,122,144,.08)}
+.card h3{margin:0 0 4px;font-size:1.05rem}
+.company{color:var(--blue);font-weight:800}
+.meta{display:flex;gap:7px;flex-wrap:wrap;margin:11px 0}
+.pill{
+  display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border-radius:999px;
+  font-size:.72rem;font-weight:800;color:#dce5ff;background:rgba(255,255,255,.065);border:1px solid var(--line)
+}
+.card p{color:var(--muted);font-size:.86rem;line-height:1.45;margin:10px 0}
+.card-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.link{color:var(--amber);text-decoration:none;font-weight:800;font-size:.82rem}
+.empty{color:var(--muted);padding:24px 10px;text-align:center;border:1px dashed var(--line);border-radius:15px}
+.modal{
+  position:fixed;inset:0;display:none;place-items:center;padding:20px;background:rgba(3,5,12,.76);z-index:10
+}
+.modal.open{display:grid}
+.dialog{
+  width:min(900px,100%);max-height:92vh;overflow:auto;border:1px solid var(--line);border-radius:24px;
+  background:linear-gradient(145deg,#141c34,#0d1325);box-shadow:0 30px 90px rgba(0,0,0,.55);padding:22px
+}
+.dialog-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px}
+.dialog h2{margin:0}
+.form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:13px}
+label{display:grid;gap:6px;color:#dce3f7;font-size:.82rem;font-weight:800}
+.full{grid-column:1/-1}
+textarea{min-height:100px;resize:vertical}
+.dialog-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;flex-wrap:wrap}
+.toast{
+  position:fixed;right:24px;bottom:24px;z-index:20;opacity:0;transform:translateY(10px);
+  background:#18213d;color:white;border:1px solid var(--line);padding:12px 16px;border-radius:14px;
+  transition:.2s;pointer-events:none
+}
+.toast.show{opacity:1;transform:none}
+footer{color:var(--muted);text-align:center;padding:28px 0 6px;font-size:.82rem}
+@media(max-width:1050px){
+  .grid{grid-template-columns:repeat(2,1fr)}
+  .board{grid-template-columns:repeat(2,1fr)}
+  .toolbar{grid-template-columns:1fr 1fr}
+}
+@media(max-width:680px){
+  .app{padding:14px}.hero{padding:20px;align-items:flex-start;flex-direction:column}
+  .grid,.board,.form-grid,.toolbar{grid-template-columns:1fr}
+  .full{grid-column:auto}.hero-actions{width:100%}.hero-actions .btn{flex:1}
+}
+</style>
+</head>
+<body>
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-card">
+    <div class="eyebrow">Nightshift Cloud Access</div>
+    <h2>Sign in to your command center</h2>
+    <p>Your applications are protected by Google sign-in and synchronized through Cloud Firestore.</p>
+    <button class="btn primary" id="googleSignInBtn">Continue with Google</button>
+  </div>
+</div>
+<div class="app">
+  <section class="hero">
+    <div>
+      <div class="eyebrow">Personal Career Operations Console</div>
+      <h1>Nightshift <span>Command Center</span></h1>
+      <div class="subtitle">A job search tracker built for momentum, clarity, and late-night plotting. Your applications stay in this browser unless you export them.</div>
+    </div>
+    <div class="hero-actions">
+      <div class="user-chip" id="userChip" style="display:none">
+        <img id="userPhoto" alt=""><span id="userName"></span>
+      </div>
+      <button class="btn" id="exportBtn">Export Backup</button>
+      <button class="btn" id="importBtn">Import Backup</button>
+      <input type="file" id="importFile" accept=".json" hidden>
+      <button class="btn" id="signOutBtn">Sign Out</button>
+      <button class="btn primary" id="addBtn">+ Add Application</button>
+    </div>
+  </section>
+  <section class="syncbar">
+    <div class="sync-status"><span class="sync-dot" id="syncDot"></span><span id="syncText">Waiting for sign-in…</span></div>
+    <div class="eyebrow" id="lastSynced">Cloud sync idle</div>
+  </section>
+
+  <section class="grid">
+    <div class="stat"><div class="stat-label">Active Pipeline</div><div class="stat-value" id="activeCount">0</div><small>Not rejected or closed</small></div>
+    <div class="stat"><div class="stat-label">Applications Sent</div><div class="stat-value" id="appliedCount">0</div><small>Applied and beyond</small></div>
+    <div class="stat"><div class="stat-label">Interviews</div><div class="stat-value" id="interviewCount">0</div><small>Interview stage or later</small></div>
+    <div class="stat"><div class="stat-label">Follow-Ups Due</div><div class="stat-value" id="followUpCount">0</div><small>Today or overdue</small></div>
+  </section>
+
+  <section class="toolbar">
+    <input id="searchInput" placeholder="Search company, role, contact, notes…">
+    <select id="statusFilter"><option value="">All statuses</option></select>
+    <select id="laneFilter">
+      <option value="">All career lanes</option>
+      <option>Enterprise Support</option><option>Endpoint / Infrastructure</option>
+      <option>Cybersecurity / SOC</option><option>AI Operations</option><option>Other</option>
+    </select>
+    <select id="arrangementFilter">
+      <option value="">All arrangements</option><option>Remote</option><option>Hybrid</option><option>Onsite</option>
+    </select>
+    <button class="btn" id="clearBtn">Clear Filters</button>
+  </section>
+
+  <main class="board" id="board"></main>
+  <footer>Nightshift stores data locally in your browser. Export backups regularly, because even command centers deserve an escape pod.</footer>
+</div>
+
+<div class="modal" id="modal">
+  <div class="dialog">
+    <div class="dialog-head">
+      <div><div class="eyebrow">Application Record</div><h2 id="modalTitle">Add Application</h2></div>
+      <button class="btn" id="closeModal">Close</button>
+    </div>
+    <form id="applicationForm">
+      <input type="hidden" id="recordId">
+      <div class="form-grid">
+        <label>Company<input class="field" id="company" required></label>
+        <label>Job Title<input class="field" id="title" required></label>
+        <label>Status<select class="field" id="status"></select></label>
+        <label>Career Lane<select class="field" id="lane">
+          <option>Enterprise Support</option><option>Endpoint / Infrastructure</option>
+          <option>Cybersecurity / SOC</option><option>AI Operations</option><option>Other</option>
+        </select></label>
+        <label>Location<input class="field" id="location" placeholder="Chicago, IL or US Remote"></label>
+        <label>Work Arrangement<select class="field" id="arrangement"><option>Remote</option><option>Hybrid</option><option>Onsite</option></select></label>
+        <label>Salary / Pay<input class="field" id="salary" placeholder="$33.07–$44.69/hr"></label>
+        <label>Source<input class="field" id="source" placeholder="Company site, LinkedIn, recruiter…"></label>
+        <label>Date Found<input class="field" type="date" id="dateFound"></label>
+        <label>Date Applied<input class="field" type="date" id="dateApplied"></label>
+        <label>Follow-Up Date<input class="field" type="date" id="followUp"></label>
+        <label>Match Rating<select class="field" id="rating"><option>Strong</option><option>Possible</option><option>Stretch</option></select></label>
+        <label>Contact Name<input class="field" id="contactName"></label>
+        <label>Contact Details<input class="field" id="contactDetails" placeholder="Email or LinkedIn name"></label>
+        <label class="full">Job Posting Link<input class="field" type="url" id="jobUrl" placeholder="https://…"></label>
+        <label class="full">Notes<textarea class="field" id="notes" placeholder="Schedule, requirements, concerns, recruiter notes, interview details…"></textarea></label>
+      </div>
+      <div class="dialog-actions">
+        <button type="button" class="btn danger" id="deleteBtn" style="display:none;margin-right:auto">Delete</button>
+        <button type="button" class="btn" id="cancelBtn">Cancel</button>
+        <button type="submit" class="btn primary">Save Application</button>
+      </div>
+    </form>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCslJJ2qOY7vOeIkG7PUMb1vW3wGlVu8Lg",
+  authDomain: "nightshift-job-tracker.firebaseapp.com",
+  projectId: "nightshift-job-tracker",
+  storageBucket: "nightshift-job-tracker.firebasestorage.app",
+  messagingSenderId: "1050777262733",
+  appId: "1:1050777262733:web:55f6d4efcbefc30cada0c4"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
+
+const STORAGE_KEY="nightshift-job-tracker-v2", LEGACY_KEY="nightshift-job-tracker-v1";
+const statuses=[
+{name:"Saved",color:"#9b7cff"},{name:"Preparing",color:"#5fd4ff"},
+{name:"Applied",color:"#ffbd66"},{name:"Interviewing",color:"#ff7eb6"},
+{name:"Offer",color:"#75e6a4"},{name:"Rejected / Closed",color:"#ff7a90"}];
+let currentUser=null, records=loadLocal(), unsubscribe=null;
+const el=id=>document.getElementById(id);
+
+function loadLocal(){try{const v=JSON.parse(localStorage.getItem(STORAGE_KEY));if(Array.isArray(v))return v;const old=JSON.parse(localStorage.getItem(LEGACY_KEY));if(Array.isArray(old))return old}catch{}return[]}
+function saveLocal(){localStorage.setItem(STORAGE_KEY,JSON.stringify(records))}
+function setSync(state,text){el("syncDot").className="sync-dot "+(state||"");el("syncText").textContent=text;if(state==="online")el("lastSynced").textContent="Synced "+new Date().toLocaleTimeString([],{hour:"numeric",minute:"2-digit"})}
+function toast(msg){const t=el("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200)}
+function due(r){if(!r.followUp||["Rejected / Closed","Offer"].includes(r.status))return false;const t=new Date();t.setHours(0,0,0,0);return new Date(r.followUp+"T00:00:00")<=t}
+function filtered(){const q=el("searchInput").value.toLowerCase().trim();return records.filter(r=>Object.values(r).join(" ").toLowerCase().includes(q)&&(!el("statusFilter").value||r.status===el("statusFilter").value)&&(!el("laneFilter").value||r.lane===el("laneFilter").value)&&(!el("arrangementFilter").value||r.arrangement===el("arrangementFilter").value))}
+function esc(v=""){return String(v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function stats(){el("activeCount").textContent=records.filter(r=>r.status!=="Rejected / Closed").length;el("appliedCount").textContent=records.filter(r=>["Applied","Interviewing","Offer"].includes(r.status)).length;el("interviewCount").textContent=records.filter(r=>["Interviewing","Offer"].includes(r.status)).length;el("followUpCount").textContent=records.filter(due).length}
+function card(r){return `<article class="card ${due(r)?"overdue":""}" data-id="${r.id}"><div class="company">${esc(r.company)}</div><h3>${esc(r.title)}</h3><div class="meta">${r.arrangement?`<span class="pill">${esc(r.arrangement)}</span>`:""}${r.salary?`<span class="pill">${esc(r.salary)}</span>`:""}${r.rating?`<span class="pill">${esc(r.rating)} match</span>`:""}${due(r)?`<span class="pill" style="color:#ffdce4">Follow-up due</span>`:""}</div>${r.location?`<p>${esc(r.location)}${r.dateApplied?` · Applied ${esc(r.dateApplied)}`:""}</p>`:""}${r.notes?`<p>${esc(r.notes.slice(0,150))}${r.notes.length>150?"…":""}</p>`:""}<div class="card-actions"><button class="btn editBtn">Edit</button>${r.jobUrl?`<a class="link" href="${esc(r.jobUrl)}" target="_blank" rel="noopener">Open posting ↗</a>`:""}</div></article>`}
+function render(){stats();const data=filtered();el("board").innerHTML=statuses.map(s=>{const items=data.filter(r=>r.status===s.name);return `<section class="column"><div class="column-head"><div class="column-title"><span class="dot" style="color:${s.color};background:${s.color}"></span>${s.name}</div><span class="count">${items.length}</span></div><div class="cards">${items.length?items.map(card).join(""):`<div class="empty">No applications here yet.</div>`}</div></section>`}).join("");document.querySelectorAll(".editBtn").forEach(b=>b.onclick=e=>openModal(e.target.closest(".card").dataset.id))}
+async function migrateIfCloudEmpty(){if(!currentUser||!records.length)return;const ref=collection(db,"users",currentUser.uid,"applications"),snap=await getDocs(ref);if(!snap.empty)return;const batch=writeBatch(db);records.forEach(r=>{const id=r.id||crypto.randomUUID();batch.set(doc(db,"users",currentUser.uid,"applications",id),{...r,id})});await batch.commit();toast("Local Nightshift data migrated to cloud")}
+function subscribe(){if(unsubscribe)unsubscribe();unsubscribe=onSnapshot(collection(db,"users",currentUser.uid,"applications"),snap=>{records=snap.docs.map(d=>({id:d.id,...d.data()}));saveLocal();render();setSync("online","Cloud sync active")},err=>{console.error(err);setSync("offline","Cloud sync error. Local cache remains available.")})}
+function openModal(id=null){el("applicationForm").reset();el("recordId").value="";el("deleteBtn").style.display="none";el("modalTitle").textContent="Add Application";el("status").value="Saved";el("dateFound").value=new Date().toISOString().slice(0,10);if(id){const r=records.find(x=>x.id===id);if(!r)return;el("modalTitle").textContent="Edit Application";el("recordId").value=r.id;el("deleteBtn").style.display="block";["company","title","status","lane","location","arrangement","salary","source","dateFound","dateApplied","followUp","rating","contactName","contactDetails","jobUrl","notes"].forEach(k=>el(k).value=r[k]||"")}el("modal").classList.add("open")}
+function closeModal(){el("modal").classList.remove("open")}
+function formRecord(){const r={id:el("recordId").value||crypto.randomUUID()};["company","title","status","lane","location","arrangement","salary","source","dateFound","dateApplied","followUp","rating","contactName","contactDetails","jobUrl","notes"].forEach(k=>r[k]=el(k).value.trim());return r}
+
+el("googleSignInBtn").onclick=async()=>{try{await signInWithPopup(auth,provider)}catch(e){console.error(e);alert("Google sign-in did not complete. Please try again.")}};
+el("signOutBtn").onclick=()=>signOut(auth);
+onAuthStateChanged(auth,async user=>{currentUser=user;if(user){el("lockScreen").style.display="none";el("userChip").style.display="flex";el("userName").textContent=user.displayName||user.email;el("userPhoto").src=user.photoURL||"";setSync("","Connecting to cloud…");await migrateIfCloudEmpty();subscribe()}else{if(unsubscribe){unsubscribe();unsubscribe=null}el("lockScreen").style.display="grid";el("userChip").style.display="none";setSync("","Waiting for sign-in…");records=loadLocal();render()}});
+el("applicationForm").onsubmit=async e=>{e.preventDefault();const r=formRecord();try{setSync("","Saving…");await setDoc(doc(db,"users",currentUser.uid,"applications",r.id),r);closeModal();toast("Application saved")}catch(err){console.error(err);alert("Nightshift could not save this record.")}};
+el("deleteBtn").onclick=async()=>{const id=el("recordId").value;if(confirm("Delete this application record?")){await deleteDoc(doc(db,"users",currentUser.uid,"applications",id));closeModal();toast("Application deleted")}};
+el("exportBtn").onclick=()=>{const blob=new Blob([JSON.stringify(records,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`nightshift-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(a.href);toast("Backup exported")};
+el("importBtn").onclick=()=>el("importFile").click();
+el("importFile").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const data=JSON.parse(await f.text());if(!Array.isArray(data))throw Error();if(confirm("Import these records into your cloud account?")){const batch=writeBatch(db);data.forEach(x=>{const id=x.id||crypto.randomUUID();batch.set(doc(db,"users",currentUser.uid,"applications",id),{...x,id})});await batch.commit();toast("Backup imported to cloud")}}catch{alert("That file is not a valid Nightshift backup.")}e.target.value=""};
+["searchInput","statusFilter","laneFilter","arrangementFilter"].forEach(id=>el(id).addEventListener("input",render));
+el("clearBtn").onclick=()=>{["searchInput","statusFilter","laneFilter","arrangementFilter"].forEach(id=>el(id).value="");render()};
+el("addBtn").onclick=()=>openModal();el("closeModal").onclick=closeModal;el("cancelBtn").onclick=closeModal;el("modal").onclick=e=>{if(e.target===el("modal"))closeModal()};
+statuses.forEach(s=>{el("status").insertAdjacentHTML("beforeend",`<option>${s.name}</option>`);el("statusFilter").insertAdjacentHTML("beforeend",`<option>${s.name}</option>`)});
+render();
+</script>
+</body>
+</html>
